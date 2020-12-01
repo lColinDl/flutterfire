@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:firebase_analytics_platform_interface/firebase_analytics_platform_interface.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
-import 'package:firebase_analytics_platform_interface/firebase_analytics_platform_interface.dart';
 
 /// Firebase Analytics API.
 class FirebaseAnalytics {
@@ -21,23 +21,18 @@ class FirebaseAnalytics {
   ///     FirebaseAnalytics analytics = FirebaseAnalytics();
   ///     analytics.android?.setSessionTimeoutDuration(true);
   final FirebaseAnalyticsAndroid android =
-      defaultTargetPlatform == TargetPlatform.android && !kIsWeb
-          ? FirebaseAnalyticsAndroid()
-          : null;
+      defaultTargetPlatform == TargetPlatform.android && !kIsWeb ? FirebaseAnalyticsAndroid() : null;
 
   /// Logs a custom Flutter Analytics event with the given [name] and event [parameters].
-  Future<void> logEvent(
-      {@required String name, Map<String, dynamic> parameters}) async {
+  Future<void> logEvent({@required String name, Map<String, dynamic> parameters}) async {
     if (_reservedEventNames.contains(name)) {
-      throw ArgumentError.value(
-          name, 'name', 'Event name is reserved and cannot be used');
+      throw ArgumentError.value(name, 'name', 'Event name is reserved and cannot be used');
     }
 
     const String kReservedPrefix = 'firebase_';
 
     if (name.startsWith(kReservedPrefix)) {
-      throw ArgumentError.value(name, 'name',
-          'Prefix "$kReservedPrefix" is reserved and cannot be used.');
+      throw ArgumentError.value(name, 'name', 'Prefix "$kReservedPrefix" is reserved and cannot be used.');
     }
 
     await _platformInstance.logEvent(name: name, parameters: parameters);
@@ -79,9 +74,7 @@ class FirebaseAnalytics {
   ///
   ///  * https://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics.html#setCurrentScreen(android.app.Activity, java.lang.String, java.lang.String)
   ///  * https://firebase.google.com/docs/reference/ios/firebaseanalytics/api/reference/Classes/FIRAnalytics#setscreennamescreenclass
-  Future<void> setCurrentScreen(
-      {@required String screenName,
-      String screenClassOverride = 'Flutter'}) async {
+  Future<void> setCurrentScreen({@required String screenName, String screenClassOverride = 'Flutter'}) async {
     if (screenName == null) {
       throw ArgumentError.notNull('screenName');
     }
@@ -104,21 +97,15 @@ class FirebaseAnalytics {
   /// alphanumeric characters or underscores and must start with an alphabetic
   /// character. The "firebase_" prefix is reserved and should not be used for
   /// user property names.
-  Future<void> setUserProperty(
-      {@required String name, @required String value}) async {
+  Future<void> setUserProperty({@required String name, @required String value}) async {
     if (name == null) {
       throw ArgumentError.notNull('name');
     }
 
-    if (name.isEmpty ||
-        name.length > 24 ||
-        name.indexOf(_alpha) != 0 ||
-        name.contains(_nonAlphaNumeric))
-      throw ArgumentError.value(
-          name, 'name', 'must contain 1 to 24 alphanumeric characters.');
+    if (name.isEmpty || name.length > 24 || name.indexOf(_alpha) != 0 || name.contains(_nonAlphaNumeric))
+      throw ArgumentError.value(name, 'name', 'must contain 1 to 24 alphanumeric characters.');
 
-    if (name.startsWith('firebase_'))
-      throw ArgumentError.value(name, 'name', '"firebase_" prefix is reserved');
+    if (name.startsWith('firebase_')) throw ArgumentError.value(name, 'name', '"firebase_" prefix is reserved');
 
     await _platformInstance.setUserProperty(name: name, value: value);
   }
@@ -827,12 +814,16 @@ class FirebaseAnalytics {
   ///
   /// See: https://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics.Event.html#VIEW_ITEM_LIST
   Future<void> logViewItemList({
-    @required String itemCategory,
+    String itemListId,
+    String itemListName,
+    List<Map<String, dynamic>> items,
   }) {
     return logEvent(
       name: 'view_item_list',
       parameters: filterOutNulls(<String, dynamic>{
-        _ITEM_CATEGORY: itemCategory,
+        _ITEM_LIST_ID: itemListId,
+        _ITEM_LIST_NAME: itemListName,
+        _ITEMS: items,
       }),
     );
   }
@@ -985,8 +976,14 @@ const String _ITEM_LOCATION_ID = 'item_location_id';
 /// Item Variant.
 // const String _ITEM_VARIANT = 'item_variant';
 
-/// The list in which the item was presented to the user.
-// const String _ITEM_LIST = 'item_list';
+/// The ID of the list in which the item was presented to the user (String).
+const String _ITEM_LIST_ID = 'item_list_id';
+
+/// The name of the list in which the item was presented to the user (String).
+const String _ITEM_LIST_NAME = 'item_list_name';
+
+/// The list of items involved in the transaction.
+const String _ITEMS = 'items';
 
 /// The checkout step (1..N).
 const String _CHECKOUT_STEP = 'checkout_step';
